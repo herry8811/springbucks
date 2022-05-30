@@ -22,6 +22,8 @@ import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -30,6 +32,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @EnableTransactionManagement
@@ -43,9 +46,9 @@ public class SpringBucksApplication implements ApplicationRunner {
 	@Autowired
 	private OrderMapper OrderMapper;
 	@Autowired
-	private CoffeeService coffeeService;
-	@Autowired
 	private OrderService orderService;
+	@Autowired
+	private RedisTemplate redisTemplate;
 
 
 	public static void main(String[] args) {
@@ -107,14 +110,31 @@ public class SpringBucksApplication implements ApplicationRunner {
 		OrderExample example = new OrderExample();
 		example.createCriteria().andStateEqualTo(1);
 		OrderMapper.selectByExampleWithRowbounds(example,new RowBounds(2, 3))
-				.forEach(l -> log.info("Page(1) Order {}", l));;
+				.forEach(l -> log.info("Page(1) Order {}", l));
 		OrderMapper.selectByExampleWithRowbounds(example,new RowBounds(1, 3))
-				.forEach(l -> log.info("Page(2) Order {}", l));;
+				.forEach(l -> log.info("Page(2) Order {}", l));
 		log.info("1===================");
 
 		OrderMapper.selectByExampleWithRowbounds(example,new RowBounds(1, 0))
-				.forEach(l -> log.info("Page(1) Order {}", l));;
+				.forEach(l -> log.info("Page(1) Order {}", l));
 		log.info("2===================");
+
+//		add all to redis
+		ValueOperations<String, Order> operations = redisTemplate.opsForValue();
+		OrderExample orderExample = new OrderExample();
+		orderExample.createCriteria().andCustomerIsNotNull();
+		OrderMapper.selectByExample(orderExample).forEach(
+				m -> operations.set(m.getCustomer(), m, 1000,TimeUnit.SECONDS)
+		);
+
+		Optional<Order> o = orderService.findSimpleOrderFromCache("Zhao Si");
+		log.info("Order {}", o);
+
+		for (int i = 0; i < 5; i++) {
+			o = orderService.findSimpleOrderFromCache("Li Lei");
+		}
+
+		log.info("Value from Redis: {}", o);
 	}
 
 	private void generateArtifacts() throws Exception{
