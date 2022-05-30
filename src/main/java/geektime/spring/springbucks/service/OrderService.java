@@ -81,7 +81,7 @@ public Order createOrder(String customer, Coffee...coffee) {
     private Optional<Order> findOneOrder(String name) {
         OrderExample matcher = new OrderExample();
         matcher.createCriteria().andCustomerEqualTo(name);
-        Optional<Order> order = Optional.ofNullable(OrderMapper.selectByExample(matcher).get(1));
+        Optional<Order> order = Optional.ofNullable(OrderMapper.selectByExample(matcher).get(0));
         log.info("Order Found: {}", order);
         return order;
     }

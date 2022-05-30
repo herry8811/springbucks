@@ -25,6 +25,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.interceptor.TransactionAspectSupport;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -56,6 +58,7 @@ public class SpringBucksApplication implements ApplicationRunner {
 	}
 
 	@Override
+	@Transactional
 	public void run(ApplicationArguments args) throws Exception {
 
 //		generateArtifacts();
@@ -69,6 +72,9 @@ public class SpringBucksApplication implements ApplicationRunner {
 				.price(Money.of(CurrencyUnit.of("CNY"), 20.0)).build();
 		int count = coffeeMapper.insert(c);
 		log.info("Save {} Coffee: {}", count, c);
+
+//		rollback test
+//		TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
 
 		c = Coffee.builder().name("latte")
 				.price(Money.of(CurrencyUnit.of("CNY"), 25.0)).build();
