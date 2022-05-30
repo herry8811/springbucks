@@ -5,8 +5,6 @@ import geektime.spring.springbucks.mapper.OrderMapper;
 import geektime.spring.springbucks.model.Coffee;
 import geektime.spring.springbucks.model.Order;
 import geektime.spring.springbucks.model.OrderExample;
-import geektime.spring.springbucks.model.OrderState;
-import geektime.spring.springbucks.service.CoffeeService;
 import geektime.spring.springbucks.service.OrderService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.ibatis.session.RowBounds;
@@ -113,6 +111,7 @@ public class SpringBucksApplication implements ApplicationRunner {
 			log.info("Update INIT to PAID: {}", orderService.updateState(order, 1));
 		}
 
+//		page rowbouonds test
 		OrderExample example = new OrderExample();
 		example.createCriteria().andStateEqualTo(1);
 		OrderMapper.selectByExampleWithRowbounds(example,new RowBounds(2, 3))
@@ -125,7 +124,7 @@ public class SpringBucksApplication implements ApplicationRunner {
 				.forEach(l -> log.info("Page(1) Order {}", l));
 		log.info("2===================");
 
-//		add all to redis
+//		add all order to redis
 		ValueOperations<String, Order> operations = redisTemplate.opsForValue();
 		OrderExample orderExample = new OrderExample();
 		orderExample.createCriteria().andCustomerIsNotNull();
